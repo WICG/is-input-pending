@@ -61,6 +61,17 @@ function doWork() {
 doWork();
 ```
 
+## What about `requestIdleCallback`?
+`requestIdleCallback` has the capacity to solve similar problems, but only when the work being done is low priority. It waits for an idle period before executing the associated work. In the example of registering behavior for a variety of UI components, we can't wait for an idle period before continuing to register additional UI components.
+
+We could use an API shape similar to `requestIdleCallback`, which instead posted a normal priority task, and provided a parallel to `IdleDeadline.timeRemaining()` which returned 0 if there was pending user input. However, this forces clients to use a specific method of posting a task, which is less flexible than the more generic `shouldYield()` proposal.
+
+## How slow is posting a task, really?
+
+Breaking tasks up into small chunks has some overhead, but is it really enough to warrant a new API?
+
+The web is different from most platforms due to it's compositional nature. The overhead of posting a task isn't merely the scheduling overhead. Posting a task may involve being interrupted by arbitrary third party content on the page. For many pages, it isn't feasible to regularly yield to third party script in order to repond to input quickly.
+
 ## Constraints
 
 Ideally, a solution to this problem would meet the following constraints:
