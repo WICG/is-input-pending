@@ -1,4 +1,4 @@
-# hasInputPending
+# isInputPending
 
 ## The Problem
 Today, developers must tradeoff how fast they can accomplish large blocks of
@@ -36,12 +36,12 @@ The performance overhead of this approach comes from a few sources:
 
 In order to enable developers to complete their work as fast as possible if the
 user isn't interacting, but respond to user input as fast as possible if input
-occurs, we propose adding a new `navigator.scheduling.hasInputPending()` API, which takes an array of input event types and returns true
+occurs, we propose adding a new `navigator.scheduling.isInputPending()` API, which takes an array of input event types and returns true
 if any of them might be pending. If called with no arguments (or an empty array), true is returned if input of _any_ type might be pending. To avoid script from misbehaving user agents will also be allowed to sometimes return true for whatever arbitrary reasons it wants.
 
 ## Example
 
-Using `scheduling.hasInputPending()` requires having some way to schedule tasks. We anticipate
+Using `scheduling.isInputPending()` requires having some way to schedule tasks. We anticipate
 most adoption coming from frameworks and large sites. However, if you have a
 list of tasks that need executing, adoption is very simple.
 
@@ -51,7 +51,7 @@ let taskQueue = [task1, task2, ...];
 function doWork() {
   while (let task = taskQueue.pop()) {
     task.execute();
-    if (navigator.scheduling.hasInputPending(['click', 'keydown', ...])) {
+    if (navigator.scheduling.isInputPending(['click', 'keydown', ...])) {
       setTimeout(doWork, 0);
       break;
     }
@@ -64,7 +64,7 @@ doWork();
 ## What about `requestIdleCallback`?
 `requestIdleCallback` has the capacity to solve similar problems, but only when the work being done is low priority. It waits for an idle period before executing the associated work. In the example of registering behavior for a variety of UI components, we can't wait for an idle period before continuing to register additional UI components.
 
-We could use an API shape similar to `requestIdleCallback`, which instead posted a normal priority task, and provided a parallel to `IdleDeadline.timeRemaining()` which returned 0 if there was pending user input. However, this forces clients to use a specific method of posting a task, which is less flexible than the more generic `scheduling.hasInputPending()` proposal.
+We could use an API shape similar to `requestIdleCallback`, which instead posted a normal priority task, and provided a parallel to `IdleDeadline.timeRemaining()` which returned 0 if there was pending user input. However, this forces clients to use a specific method of posting a task, which is less flexible than the more generic `scheduling.isInputPending()` proposal.
 
 ## How slow is posting a task, really?
 
