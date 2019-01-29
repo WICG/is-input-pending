@@ -22,7 +22,7 @@ execute all the work in the minimal number of tasks.
 Responding to user input as fast as possible today requires paying some
 performance overhead, and minimizing that performance overhead is quite
 complicated. The most straight forward approach is to perform a unit of work,
-and then `setTimeout(..., 0)` or `setImmediate(...)` to continue the work.
+and then continue the work in a macrotask such as `setTimeout(..., 0)`.
 
 The performance overhead of this approach comes from a few sources:
 * Inherent overhead in posting a task.
