@@ -93,3 +93,9 @@ The fifth constraint is interesting - in order for work which is incentivized to
 finish quickly (e.g., ads script) to be able to adopt this API and improve
 responsiveness to input, we need some way to prevent arbitrary javascript from
 executing between when script yields and when it is rescheduled.
+
+## Privacy and Security
+
+The primary concerns with this API stem from the correctness of input event attribution. UAs must make sure they don't leak information about pending events dispatched to other frames by performing necessary hit-testing and focus attribution. For maximum utility, this should be done off the event loop so that running JS does not have to yield in order to detect input.
+
+User agents may want consider is a combination of off-main-thread based hit testing (e.g. done on the compositor thread, if present) and keyboard focus to determine the appropriate document to mark as having input pending. By performing hit testing online, calls to isInputPending can be made faster, safer from timing attacks, and thus more effective for scheduling purposes.
