@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <title>Early detection of input events</title>
+    <script src='https://www.w3.org/Tools/respec/respec-w3c' async class='remove'></script>
+    <script class='remove'>
+      var respecConfig = {
+        specStatus: "CG-DRAFT",
+        editors: [{
+          name: "Nathan Schloss",
+          company: "Facebook",
+        },
+        {
+          name: "Andrew Comminos",
+          company: "Facebook",
+        }],
+        shortName: "is-input-pending",
+        wg: "Web Platform Incubator Community Group",
+        wgURI: "https://www.w3.org/community/wicg/",
+        github: "https://github.com/WICG/is-input-pending",
+      };
+    </script>
+  </head>
+  <body>
+    <h1>isInputPending</h1>
+    <section id='abstract'>
+      <p>
+        This document describes an API for detecting if there are pending input events that script might be delaying from firing by continuing to run.
+      </p>
+    </section>
+    <section id='sotd'>
+      <p>
+        This document is in the draft stage and has yet to be submitted to a working group for approval.
+      </p>
+    </section>
+    <section id="conformance"></section>
+    <section class="informative">
+      <h2>Introduction</h2>
+      <p>
+        When running script that's required to display something there is a trade off that developers need to make today. If a script might take a long time to run and a user provides some sort of input while this is happening, then the user agent would need to wait until the script has finished before dispatching the input event. Having a lot of lag before responding to an input event is not a great user experience, so developers will often break up long scripts into smaller chunks in order to allow the user agent to dispatch events between the chunks. Each time the script yields it will need to somehow post a message, call a combination of requestAnimation frame and requestIdleCallback, or do something else in order to make sure it both truly yields to allow for events to be dispatched and then that it can get called again after yielding. Even in the best case scenario, each time the script yields it can take many milliseconds before it gets a chance to run again. So unfortunately, this is also not a great user experience since in part now the initial script gets delayed by quite a bit since it needs to yield so much.
+      </p>
+      <figure>
+        <image src="isInputPending-1.jpeg" width="900" alt="Without isInputPending there can be a tradeoff between loading pages quickly and responding to input quickly." />
+        <figcaption>
+          Without isInputPending there can be a tradeoff between loading pages quickly and responding to input quickly.
+        </figcaption>
+      </figure>
+      <p>
+        The goal of the isInputPending api is that it will now allow developers to eliminate this trade off. Instead of totally yielding to the user agent and having to incur the cost of one or multiple event loops after yielding, long running script can now run to its completion while still remaining responsive.
+      </p>
+      <figure>
+        <image src="isInputPending-2.jpeg" width="900" alt="isInputPending can be used to remove any tradeoff between loading pages quickly and responding to input quickly." />
+        <figcaption>
+          isInputPending can be used to remove any tradeoff between loading pages quickly and responding to input quickly.
+        </figcaption>
+      </figure>
+    </section>
+    <section class="informative">
+      <h2>Examples of Usage</h2>
+      <p>
+        If a developer has a list of tasks that need executing, then adoption is quite simple.
+      </p>
+      <pre class='example highlight'>
+        let taskQueue = [task1, task2, ...];
+
+        function doWork() {
+          while (let task = taskQueue.pop()) {
+            task.execute();
+            if (navigator.scheduling.isInputPending(['click', 'keydown', ...])) {
+              setTimeout(doWork, 0);
+              break;
+            }
+          }
+        }
+
+        doWork();
+      </pre>
+    </section>
+    <section data-dfn-for="InputType" data-link-for="InputType">
+      <h2><dfn data-dfn-for="InputType">InputType</dfn></h2>
+      <p>The <code>InputType</code> type represents a <code>DOMString</code> that may be equal to an event type.</p>
+      <pre class='idl'>
+        typedef <dfn data-cite="webidl#idl-DOMString">DOMString</dfn> InputType;
+      </pre>
+    </section>
+    <section data-link-for="Scheduling" data-dfn-for="Scheduling">
+      <h2>The <dfn>Scheduling</dfn> interface</h2>
+      <pre class='idl'>
+        [<dfn data-cite="webidl#idl-Exposed">Exposed</dfn>=<dfn data-cite="HTML5#the-window-object">Window</dfn>] interface Scheduling {
+           <dfn data-cite="webidl#idl-boolean">boolean</dfn> isInputPending(optional sequence&lt;InputType&gt; inputTypes = []);
+           boolean canCheckInputPending(optional InputType inputType = "");
+        };
+      </pre>
+      <section>
+        <h3>The <dfn data-link-for="isInputPending">isInputPending</dfn> Method</h3>
+        <p>The <code>isInputPending</code> method returns a value based on the strings listed in <code>inputTypes</code>. If the <code>isInputPending</code> method is called then the user agent MUST run the following steps:</p>
+        <ol>
+          <li>If <code>inputTypes</code> is empty then let <code>inputTypes</code> be an array of <code>SupportedEventTypes</code>.</li>
+          <li>Let <code>pendingResult</code> be false.</li>
+          <li>The user agent MAY at this step set <code>pendingResult</code> to true for any reason.</li>
+          <li>The user agent MAY at this step continue to step 6 for any reason.</li>
+          <li>For each <code>item</code> in <code>inputTypes</code>:<ol>
+            <li>If <code>item</code> is not in <code>SupportedEventTypes</code>, continue to next <code>item</code>.</li>
+            <li>If the <dfn data-cite="ecmascript#surrounding-agent">surrounding agent</dfn>'s <dfn data-cite="html#event-loop">event loop</dfn> has any <dfn data-cite="html#task-queue">task queues</dfn> that contain a <dfn data-cite="html#concept-task">task</dfn> that will <dfn data-cite="dom#concept-event-dispatch">dispatch</dfn> an event, with <dfn data-cite="dom#dom-event-type">type</dfn> attribute equal to <code>item</code>, or if the user agent determines that it MAY soon enqueue such a task, and the dispitached event would have an EventTarget that exists within a window of the same origin, the user agent MAY let <code>pendingResult</code> be true and continue to step 6.</li>
+          </ol></li>
+          <li>Return <code>pendingResult</code>.</li>
+        </ol>
+        <p class="note">The overall goal for this api is to allow user agents to return true if they think an event may end up getting dispatched to a browsing context soon. Not only if an event is already placed into the queue. This may mean that a user agent may look into the current configuration of iframes, other events in the queue, or other information when making decisions in step 5b. For example, there may be cases where if a mousedown event is queued then a click event may be fired for this frame after the mousedown event. However after the mousedown event is fired the user agent knows that the click event will not be fired. In this case the user agent should return 'true' for a 'click' input before the mousedown event, but after it knows that click will not be fired it should return false.</p>
+
+        <p class="note">The specification for the isInputPending method is intentionally written in such a way that a user agent may return true or false for any reason. This is so user agents may implement their own security measures while implementing this api and remain compliant with this specification.</p>
+      </section>
+      <section>
+        <h3>The <dfn data-link-for="canCheckInputPending">canCheckInputPending</dfn> method</h3>
+        <p>The <code>canCheckInputPending</code> method returns a value indicating if this api is supported in this environment and optionally if a specific InputType is supported. If the <code>canCheckInputPending</code> is called then the user agent MUST run the following steps:</p>
+        <ol>
+          <li>If <code>SupportedEventTypes</code> is empty return false.</li>
+          <li>If inputType is not equal to an empty string and if inputType is not in <code>SupportedEventTypes</code>, return false.</li>
+          <li>Return true.</li>
+        </ol>
+      </section>
+    </section>
+    <section data-link-for="Window" data-dfn-for="Window">
+      <h2>Extensions to the Window interface</h2>
+      <pre class="idl">
+        partial interface Window {
+          readonly attribute <dfn data-cite="is-input-pending#dom-scheduling">Scheduling</dfn> scheduling;
+        };
+      </pre>
+    </section>
+    <section>
+      <h2><code>SupportedEventTypes</code></h2>
+      <p><code>SupportedEventTypes</code> is an internal array of event types that the user agent supports detecting pending events for. A user agent MUST not expose <code>SupportedEventTypes</code> to script.</p>
+      <p><code>SupportedEventTypes</code> MUST include:</p>
+      <ul>
+        <li><code><dfn data-cite="uievents#event-type-click">click</dfn></code></li>
+        <li><code><dfn data-cite="uievents#event-type-keydown">keydown</dfn></code></li>
+        <li><code><dfn data-cite="uievents#event-type-wheel">wheel</dfn></code></li>
+      </ul>
+      <p>SupportedEventTypes MAY include: Any <code><dfn data-cite="uievents#uievent">UIEvent</dfn></code>, <code><dfn data-cite="mediacapture-streams#event-summary">MediaCapture</dfn></code> Event or any other event type.</p>
+    </section>
+    <section class="informative">
+      <h2>Privacy and Security</h2>
+      <p>Script can already monitor for events within same origin browsing contexts. A child iframe with the same origin as the parent can already observe timing of events on the parent iframe and vice versa due to the fact that they share an event loop. So from that standpoint, this spec does not introduce a new mechanism for monitoring events. However, practically, when user agents implement this specification it may be challenging to isolate the event queues they check to just the current same origin browsing contexts, this may be partially difficult in user agents that do not use a separate process for iframes that have dissimilar origin. Allowing an origin to monitor events on another origin could allow for a range of attacks. User agents are encouraged to think about how to mitigate the risk of leaking events from dissimilar origins and the specification is written in such a way that user agents may return true or false for any reason from isInputPending in order to complicate such attacks.</p>
+      <p>The case of a child iframe within a frame is even trickier to deal with, as the frame that gets an event may change based on what script is currently doing. In some cases a malicious cross origin frame could attempt to bring focus to itself in order to look for input events that a user could have intended to be sent to the parent frame. User agents should pay special attention to this case and add appropriate countermeasures based on their architecture.</p>
+      <p>One thing user agents may want to consider is a combination of off-main-thread based hit testing (e.g. done on the compositor thread, if present) and keyboard focus to determine the appropriate document to mark as having input pending. By performing hit testing online, calls to isInputPending can be made faster, safer from timing attacks, and thus more effective for scheduling purposes.</p>
+    </section>
+  </body>
+</html>
