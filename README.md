@@ -39,6 +39,8 @@ user isn't interacting, but respond to user input as fast as possible if input
 occurs, we propose adding a new `navigator.scheduling.isInputPending()` API, which takes an array of input event types and returns true
 if any of them might be pending. If called with no arguments (or an empty array), true is returned if input of _any_ type might be pending. To avoid script from misbehaving user agents will also be allowed to sometimes return true for whatever arbitrary reasons it wants.
 
+See the draft specification [here](https://wicg.github.io/is-input-pending/).
+
 ## Example
 
 Using `scheduling.isInputPending()` requires having some way to schedule tasks. We anticipate
