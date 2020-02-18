@@ -50,10 +50,14 @@ list of tasks that need executing, adoption is very simple.
 ```javascript
 let taskQueue = [task1, task2, ...];
 
+const options = new IsInputPendingOptions({
+  includeContinuous: false,
+});
+
 function doWork() {
   while (let task = taskQueue.pop()) {
     task.execute();
-    if (navigator.scheduling.isInputPending(['click', 'keydown', ...])) {
+    if (navigator.scheduling.isInputPending(options)) {
       setTimeout(doWork, 0);
       break;
     }
