@@ -125,7 +125,7 @@
           <li>If <var>isInputPendingOptions</var> is undefined, assign it to a newly-instantiated <a>IsInputPendingOptions</a> with the default constructor.</li>
           <li>The user agent MAY at this step continue to step 5 for any reason.</li>
           <li>If the <dfn data-cite="ecmascript#surrounding-agent">surrounding agent</dfn>'s <dfn data-cite="html#event-loop">event loop</dfn> has any <dfn data-cite="html#task-queue">task queues</dfn> that contain a <dfn data-cite="html#concept-task">task</dfn> that will <dfn data-cite="dom#concept-event-dispatch">dispatch</dfn> an event that is a <dfn data-cite="uievents#idl-uievent">UIEvent</dfn> or <dfn data-cite="touch-events#touchevent-interface">TouchEvent</dfn> or a child of either, or if the user agent determines that it MAY soon enqueue such a task, and the dispatched event would have an EventTarget that exists within a window of the same origin, then the user agent MUST run the following steps:<ol type="a">
-            <li> If the user agent considers the task to be a <code><a>ContinuousEvent</a></code> and <i>isInputPendingOptions.includeContinuous</i> is false continue to step 5.</li>
+            <li>If the user agent considers the task to be a <a>continuous event task</a> and <i>isInputPendingOptions.includeContinuous</i> is false, continue to step 5.</li>
             <li>The user agent MAY let <i>pendingResult</i> be true.</li>
           </ol></li>
           <li>Return <i>pendingResult</i>.</li>
@@ -145,16 +145,16 @@
       </pre>
     </section>
     <section>
-      <h2>ContinuousEvents</h2>
-      <p class="note">The distinction between <a>ContinuousEvents</a> and other event types exists in order to prevent script from yielding too often. Under normal circumstances, a user moving their pointer around on a document wouldn’t expect that to have any effect on performance so by default these events are excluded from <a data-link-for="Scheduling">isInputPending</a>. However, there may be times when a document wants to yield for these events.</p>
+      <h2>Continuous events</h2>
+      <p class="note">The distinction between <a>continuous events</a> and other event types exists in order to prevent script from yielding too often. Under normal circumstances, a user moving their pointer around on a document wouldn’t expect that to have any effect on performance so by default these events are excluded from <a data-link-for="Scheduling">isInputPending</a>. However, there may be times when a document wants to yield for these events.</p>
       <section>
-        <h3><dfn data-lt="ContinuousEvents">ContinuousEvent</dfn></h3>
-        <p>An event MUST be considered a <code>ContinuousEvent</code> if it is a <dfn data-cite="dom#dom-event-istrusted">trusted event</dfn> of type <dfn data-cite="uievents#event-type-mousemove">mousemove</dfn>, <dfn data-cite="uievents#event-type-wheel">wheel</dfn>, <dfn data-cite="touch-events#the-touchmove-event">touchmove</dfn>, <dfn data-cite="html#dragevent">drag</dfn>, <dfn data-cite="pointerevents3#the-pointermove-event">pointermove</dfn>, or <dfn data-cite="pointerevents3#the-pointerrawupdate-event">pointerrawupdate</dfn> or a child of any of those. A user agent MAY consider other trusted events that are of a specific type and are children of <a>UIEvent</a> or <a>TouchEvent</a> to be a <code>ContinuousEvent</code> as long as those specific types are consistent for that user agent and that all events of those types or children of those types are considered <code>ContinuousEvents</code>.</p>
-        <p class="note">All of event types that are considered to be <code>ContinuousEvents</code> are specified in such a way where they are fired successively, and the user agent is encouraged to fire the events at a rate specific for the user agent and platform. The language about a user agent being able to include other event types is there so user agents that have nonstandard events that are defined in a similar manner may also be considered to be <code>ContinuousEvents</code>.</p>
+        <h3>Continuous event</h3>
+        <p>An event MUST be considered a <dfn>continuous event</dfn> if it is a <dfn data-cite="dom#dom-event-istrusted">trusted event</dfn> of type <dfn data-cite="uievents#event-type-mousemove">mousemove</dfn>, <dfn data-cite="uievents#event-type-wheel">wheel</dfn>, <dfn data-cite="touch-events#the-touchmove-event">touchmove</dfn>, <dfn data-cite="html#dragevent">drag</dfn>, <dfn data-cite="pointerevents3#the-pointermove-event">pointermove</dfn>, or <dfn data-cite="pointerevents3#the-pointerrawupdate-event">pointerrawupdate</dfn> or a child of any of those. A user agent MAY consider other trusted events that are of a specific type and are children of <a>UIEvent</a> or <a>TouchEvent</a> to be a <a>continuous event</a> as long as those specific types are consistent for that user agent and that all events of those types or children of those types are considered <a>continuous events</a>.</p>
+        <p class="note">All of event types that are considered to be <a>continuous events</a> are specified in such a way where they are fired successively, and the user agent is encouraged to fire the events at a rate specific for the user agent and platform. The language about a user agent being able to include other event types is there so user agents that have nonstandard events that are defined in a similar manner may also be considered to be <a>continuous events</a>.</p>
       </section>
       <section>
-        <h3><dfn>ContinuousEventTask</dfn></h3>
-        <p>A <a>task</a> MUST be considered a <code>ContinuousEventTask</code> if it will <a>dispatch</a> an event that is a <a>ContinuousEvent</a>.</p>
+        <h3>Continuous event task</h3>
+        <p>A <a>task</a> MUST be considered a <dfn>continuous event task</dfn> if it will <a>dispatch</a> an event that is a <a>continuous event</a>.</p>
       </section>
     </section>
     <section class="informative">
