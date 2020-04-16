@@ -107,14 +107,14 @@
           <li>If <i>isInputPendingOptionsInit.includeContinuous</i> is set and is not null, then set the value of <i>options.includeContinuous</i> to the value of <i>isInputPendingOptionsInit.includeContinuous</i>. Otherwise, set <i>isInputPendingOptionsInit.includeContinuous</i> to <i>false</i>.</li>
           <li>Return <i>options</i>.</li>
         </ol>
-        <p class="note"><a data-link-for="Scheduling">isInputPending</a> is expected to be called many times within a single frame and so the API is designed to be as low overhead as possible. Many browsers have optimizations that can be applied if the options object is instantiated once and is of a specific type verses having to check a generic object each time; thus in order to allow for browser optimization, <a>IsInputPendingOptions</a> objects require instantiation.</p>
+        <p class="note">As <a data-link-for="Scheduling">isInputPending</a> is expected to be called many times within a single frame, the API is designed to be as low overhead as possible. The presence of an options struct gives UAs the ability to optimize parameters, and thus reusing long-lived options objects is RECOMMENDED.</p>
       </section>
     </section>
     <section data-dfn-for="Scheduling">
       <h2>The <dfn>Scheduling</dfn> interface</h2>
       <pre class='idl'>
         [<dfn data-cite="webidl#idl-Exposed">Exposed</dfn>=Window] interface Scheduling {
-           boolean isInputPending(IsInputPendingOptions isInputPendingOptions);
+           boolean isInputPending(optional IsInputPendingOptions isInputPendingOptions);
         };
       </pre>
       <section>
@@ -122,15 +122,15 @@
         <p>The <code>isInputPending</code> method returns a value based on the options set listed in <code>isInputPendingOptions</code>. If the <code>isInputPending</code> method is called then the user agent MUST run the following steps:</p>
         <ol>
           <li>Let <i>pendingResult</i> be false.</li>
-          <li>The user agent MAY at this step continue to step 4 for any reason.</li>
+          <li>If <var>isInputPendingOptions</var> is undefined, assign it to a newly-instantiated <a>IsInputPendingOptions</a> with the default constructor.</li>
+          <li>The user agent MAY at this step continue to step 5 for any reason.</li>
           <li>If the <dfn data-cite="ecmascript#surrounding-agent">surrounding agent</dfn>'s <dfn data-cite="html#event-loop">event loop</dfn> has any <dfn data-cite="html#task-queue">task queues</dfn> that contain a <dfn data-cite="html#concept-task">task</dfn> that will <dfn data-cite="dom#concept-event-dispatch">dispatch</dfn> an event that is a <dfn data-cite="uievents#idl-uievent">UIEvent</dfn> or <dfn data-cite="touch-events#touchevent-interface">TouchEvent</dfn> or a child of either, or if the user agent determines that it MAY soon enqueue such a task, and the dispatched event would have an EventTarget that exists within a window of the same origin, then the user agent MUST run the following steps:<ol type="a">
-            <li> If the user agent considers the task to be a <code><a>ContinuousEvent</a></code> and <i>isInputPendingOptions.includeContinuous</i> is false continue to step 4.</li>
+            <li> If the user agent considers the task to be a <code><a>ContinuousEvent</a></code> and <i>isInputPendingOptions.includeContinuous</i> is false continue to step 5.</li>
             <li>The user agent MAY let <i>pendingResult</i> be true.</li>
           </ol></li>
           <li>Return <i>pendingResult</i>.</li>
         </ol>
         <p>Any task used in step 3 SHOULD have been queued after <code>isInputPendingOptions</code> was instantiated.</p>
-        <p class="note">Just as with <a>IsInputPendingOptions</a> some browsers may be able to apply optimizations based on the existence of options object. In order to encourage proper usage of this API, an <a>IsInputPendingOptions</a> object MUST be passed to the isInputPending function and is not optional.</p>
         <p class="note">The overall goal for this api is to allow user agents to return true if they think an event may end up getting dispatched to a unit of same origin <dfn data-cite="html#browsing-context">browsing context</dfn> soon, and not only if an event is already placed into the queue. This may mean that a user agent may look into the current configuration of iframes, other events in the queue, or other information when making decisions in step 2.1. For example, there may be cases where if a mousedown event is dispatched then a click event may be fired for this frame after the mousedown event. However if the mousedown event is canceled then the user agent knows that the click event will not be fired. In this case the user agent should return 'true' for a 'click' input before the canceling mousedown event, but after it knows that a click will not be fired it should return false.</p>
 
         <p class="note">The specification for the isInputPending method is intentionally written in such a way that a user agent may return false for any reason. This is so user agents may include their own security and performance measures while implementing this api and remain compliant with this specification. For example, some user agents may not know which unit of same origin browsing context they would dispatch an event to without a prohibitively expensive computation, in that case it would be okay for the user agent to return false. It's never okay for a user agent to return true when it's unsure that the unit of same origin browsing context querying isInputPending is not the same one where the event will be dispatched. Returning true for an event that may get dispatched to a different origin browsing context could allow for parent iframes to observe events in different origin child iframes, which would be a violation of security.</p>
