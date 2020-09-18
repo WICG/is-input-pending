@@ -36,16 +36,20 @@ The performance overhead of this approach comes from a few sources:
 
 In order to enable developers to complete their work as fast as possible if the
 user isn't interacting, but respond to user input as fast as possible if input
-occurs, we propose adding a new `navigator.scheduling.isInputPending()` API, which takes an array of input event types and returns true
-if any of them might be pending. If called with no arguments (or an empty array), true is returned if input of _any_ type might be pending. To avoid script from misbehaving user agents will also be allowed to sometimes return true for whatever arbitrary reasons it wants.
+occurs, we propose adding a new `navigator.scheduling.isInputPending()` API.
+This API takes an IsInputPendingOptions object, which may be configured to
+include discrete input (e.g. mouse clicks, key presses), or discrete _and_
+continuous input (e.g. mouse movement, touch dragging). If given no options
+object, the default is the former.
 
 See the draft specification [here](https://wicg.github.io/is-input-pending/).
 
 ## Example
 
-Using `scheduling.isInputPending()` requires having some way to schedule tasks. We anticipate
-most adoption coming from frameworks and large sites. However, if you have a
-list of tasks that need executing, adoption is very simple.
+Using `navigator.scheduling.isInputPending()` requires having some way to
+schedule tasks. We anticipate most adoption coming from frameworks and large
+sites. However, if you have a list of tasks that need executing, adoption is
+very simple.
 
 ```javascript
 let taskQueue = [task1, task2, ...];
