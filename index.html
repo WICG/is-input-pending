@@ -63,7 +63,7 @@
       </p>
       <pre class='example highlight'>
         let taskQueue = [task1, task2, ...];
-        const options = new IsInputPendingOptions({includeContinuous: true});
+        const options = {includeContinuous: true};
 
         function doWork() {
           while (let task = taskQueue.pop()) {
@@ -81,40 +81,20 @@
     <section>
       <h2>IsInputPendingOptions</h2>
       <section>
-        <h3><dfn>IsInputPendingOptionsInit</dfn></h3>
-        <p>The <code><a>IsInputPendingOptionsInit</a></code> type represents an object that is passed to the <code><a>IsInputPendingOptions</a></code> <a data-link-for="IsInputPendingOptions">constructor</a>.</p>
+        <h3><dfn>IsInputPendingOptions</dfn></h3>
+        <p>The <code>IsInputPendingOptions</code> type represents an options dictionary that is used by <a data-link-for="Scheduling">isInputPending</a>.</p>
         <pre class='idl'>
-          <dfn data-cite="webidl#idl-dictionary">dictionary</dfn> IsInputPendingOptionsInit {
+          <dfn data-cite="webidl#idl-dictionary">dictionary</dfn> IsInputPendingOptions {
             <dfn data-cite="webidl#idl-boolean">boolean</dfn> includeContinuous = false;
           };
         </pre>
-      </section>
-      <section>
-        <h3><dfn>IsInputPendingOptions</dfn></h3>
-        <p>The <code>IsInputPendingOptions</code> type represents an object that is used by <a data-link-for="Scheduling">isInputPending</a>.</p>
-        <pre class='idl'>
-          [Exposed=Window]
-          <dfn data-cite="webidl#idl-interface">interface</dfn> IsInputPendingOptions {
-            constructor(optional <code>IsInputPendingOptionsInit</code> isInputPendingOptionsInit = {});
-            attribute boolean includeContinuous;
-          };
-        </pre>
-        <p>
-          When a <code><a data-link-for="IsInputPendingOptions">constructor</a></code> of the <code>IsInputPendingOptions</code> interface is invoked, then the user agent MUST run the following steps:
-        </p>
-        <ol>
-          <li>Let <i>options</i> be the result of creating a new object using <code><a>IsInputPendingOptions</a></code>.</li>
-          <li>If <i>isInputPendingOptionsInit.includeContinuous</i> is set and is not null, then set the value of <i>options.includeContinuous</i> to the value of <i>isInputPendingOptionsInit.includeContinuous</i>. Otherwise, set <i>isInputPendingOptionsInit.includeContinuous</i> to <i>false</i>.</li>
-          <li>Return <i>options</i>.</li>
-        </ol>
-        <p class="note">As <a data-link-for="Scheduling">isInputPending</a> is expected to be called many times within a single frame, the API is designed to be as low overhead as possible. The presence of an options struct gives UAs the ability to optimize parameters, and thus reusing long-lived options objects is RECOMMENDED.</p>
       </section>
     </section>
     <section data-dfn-for="Scheduling">
       <h2>The <dfn>Scheduling</dfn> interface</h2>
       <pre class='idl'>
         [<dfn data-cite="webidl#idl-Exposed">Exposed</dfn>=Window] interface Scheduling {
-           boolean isInputPending(optional IsInputPendingOptions isInputPendingOptions);
+           boolean isInputPending(optional IsInputPendingOptions isInputPendingOptions = {});
         };
       </pre>
       <section>
@@ -122,7 +102,7 @@
         <p>The <code>isInputPending</code> method returns a value based on the options set listed in <code>isInputPendingOptions</code>. If the <code>isInputPending</code> method is called then the user agent MUST run the following steps:</p>
         <ol>
           <li>Let <i>pendingResult</i> be false.</li>
-          <li>If <var>isInputPendingOptions</var> is undefined, assign it to a newly-instantiated <a>IsInputPendingOptions</a> with the default constructor.</li>
+          <li>If <var>isInputPendingOptions</var> is undefined, assign it to a newly-instantiated <a>IsInputPendingOptions</a> with default parameters.</li>
           <li>The user agent MAY at this step continue to step 5 for any reason.</li>
           <li>If the <dfn data-cite="ecmascript#surrounding-agent">surrounding agent</dfn>'s <dfn data-cite="html#event-loop">event loop</dfn> has any <dfn data-cite="html#task-queue">task queues</dfn> that contain a <dfn data-cite="html#concept-task">task</dfn> that will <dfn data-cite="dom#concept-event-dispatch">dispatch</dfn> an event that is a <dfn data-cite="uievents#idl-uievent">UIEvent</dfn> or <dfn data-cite="touch-events#touchevent-interface">TouchEvent</dfn> or a child of either, or if the user agent determines that it MAY soon enqueue such a task, and the dispatched event would have an EventTarget that exists within a window of the same origin, then the user agent MUST run the following steps:<ol type="a">
             <li>If the user agent considers the task to be a <a>continuous event task</a> and <i>isInputPendingOptions.includeContinuous</i> is false, continue to step 5.</li>
