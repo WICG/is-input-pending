@@ -37,7 +37,7 @@ The performance overhead of this approach comes from a few sources:
 In order to enable developers to complete their work as fast as possible if the
 user isn't interacting, but respond to user input as fast as possible if input
 occurs, we propose adding a new `navigator.scheduling.isInputPending()` API.
-This API takes an IsInputPendingOptions object, which may be configured to
+This API takes an IsInputPendingOptions dictionary, which may be configured to
 include discrete input (e.g. mouse clicks, key presses), or discrete _and_
 continuous input (e.g. mouse movement, touch dragging). If given no options
 object, the default is the former.
@@ -54,9 +54,9 @@ very simple.
 ```javascript
 let taskQueue = [task1, task2, ...];
 
-const options = new IsInputPendingOptions({
+const options = {
   includeContinuous: false,
-});
+};
 
 function doWork() {
   while (let task = taskQueue.pop()) {
