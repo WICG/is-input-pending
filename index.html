@@ -115,9 +115,9 @@
           </li>
           <li>Return |pendingResult|.</li>
         </ol>
-        <p class="note">The overall goal for this api is to allow user agents to return true if they think an event may end up getting dispatched to a unit of same origin <dfn data-cite="html#browsing-context">browsing context</dfn> soon, and not only if an event is already placed into the queue. This may mean that a user agent may look into the current configuration of iframes, other events in the queue, or other information when making decisions in step 2.1. For example, there may be cases where if a mousedown event is dispatched then a click event may be fired for this frame after the mousedown event. However if the mousedown event is canceled then the user agent knows that the click event will not be fired. In this case the user agent should return 'true' for a 'click' input before the canceling mousedown event, but after it knows that a click will not be fired it should return false.</p>
-
-        <p class="note">The specification for the isInputPending method is intentionally written in such a way that a user agent may return false for any reason. This is so user agents may include their own security and performance measures while implementing this api and remain compliant with this specification. For example, some user agents may not know which unit of same origin browsing context they would dispatch an event to without a prohibitively expensive computation, in that case it would be okay for the user agent to return false. It's never okay for a user agent to return true when it's unsure that the unit of same origin browsing context querying isInputPending is not the same one where the event will be dispatched. Returning true for an event that may get dispatched to a different origin browsing context could allow for parent iframes to observe events in different origin child iframes, which would be a violation of security.</p>
+        <p class="note">
+          Step 4.2 intends to handle cases where the [= EventTarget =] of the user's input may be ambiguous, such as if focus changes before events are dispatched. The user agent must ensure that any input detected is dispatched to a context that is same-origin with the context invoking isInputPending, if at all -- as the user agent may reserve discretion to return false for isInputPending in complex cases (see <a href="#privacy-and-security">Privacy and Security</a>).
+        </p>
       </section>
     </section>
     <section>
